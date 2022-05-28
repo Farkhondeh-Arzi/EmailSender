@@ -9,24 +9,23 @@ import java.util.Properties;
 
 public class MailSenderService {
 
-    private final MailInfo setting;
+    private final MailInfo mailInfo;
 
     private final Properties properties = System.getProperties();
 
     private Session session;
 
-    public MailSenderService(MailInfo setting) {
-        this.setting = setting;
-        setProperties();
+    public MailSenderService(MailInfo mailInfo) {
+        this.mailInfo = mailInfo;
         createSession();
     }
 
     public void setProperties() {
-        properties.put("mail.smtp.host", setting.getHost());
-        properties.put("mail.smtp.port", setting.getServerPort());
+        properties.put("mail.smtp.host", mailInfo.getHost());
+        properties.put("mail.smtp.port", mailInfo.getServerPort());
         properties.put("mail.smtp.auth", "true");
 
-        switch (setting.getType()) {
+        switch (mailInfo.getType()) {
             case TLS:
                 properties.put("mail.smtp.starttls.enable", "true");
                 break;
@@ -43,18 +42,20 @@ public class MailSenderService {
         session = Session.getInstance(properties,
                 new Authenticator() {
                     protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(setting.getUsername(),
-                                setting.getPassword());
+                        return new PasswordAuthentication(mailInfo.getUsername(),
+                                mailInfo.getPassword());
                     }
                 });
     }
 
     public boolean send(String to, String subject, String body) {
 
+        setProperties();
+
         //compose the message
         try {
             MimeMessage message = new MimeMessage(session);
-            message.setFrom(setting.getServerAddress());
+            message.setFrom(mailInfo.getServerAddress());
             message.addRecipient(Message.RecipientType.TO, new InternetAddress(to));
             message.setSubject(subject);
             message.setText(body);
